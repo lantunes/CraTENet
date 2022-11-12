@@ -6,7 +6,7 @@ based on the [CrabNet](https://github.com/anthony-wang/CrabNet) architecture. Th
 be used to reproduce the experiments described in the paper, including an implementation of the CraTENet model, using 
 the Tensorflow and Keras frameworks. It also provides a means of obtaining the data required for the experiments.
 
-<img src="resources/cratenet-arch.png" width="85%"/>
+<img src="resources/cratenet-arch.png" width="65%"/>
 
 ## Obtaining the Data
 
@@ -30,11 +30,11 @@ Assuming that the Ricci et al. electronic transport database files have been dow
 `etransport_data_1/` and `etransport_data_2`, the following script can be used to extract the <i>S</i> and <i>σ</i> 
 tensor diagonals (from which the target values will ultimately be derived):
 ```
-python bin/extract_data_xyz.py --dir ./etransport_data_1 ./etransport_data_2 --out out/all_data_xyz.csv
+python bin/extract_data_xyz.py --dir ./etransport_data_1 ./etransport_data_2 --out all_data_xyz.csv
 ```
 The same can be done to extract the band gaps associated with each compound:
 ```
-python bin/extract_data_gap.py --dir ./etransport_data_1 ./etransport_data_2 --out out/all_data_gap.csv
+python bin/extract_data_gap.py --dir ./etransport_data_1 ./etransport_data_2 --out all_data_gap.csv
 ```
 
 Alternatively, the extracted <i>S</i> and <i>σ</i> tensor diagonals can be downloaded directly:
