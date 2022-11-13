@@ -8,14 +8,14 @@ the Tensorflow and Keras frameworks. It also provides a means of obtaining the d
 
 <img src="resources/cratenet-arch.png" width="60%"/>
 
-## Obtaining the Training Data
+## Obtaining the Training Data: The Data Preprocessing Pipeline
 
-To reproduce the experiments in the paper, data must be obtained from the Ricci et al. electronic transport database, 
-and transformed into a format that the CraTENet model accepts. Although files containing the training data are provided 
-for download, and can be immediately used with the model, the entire data pre-processing pipeline is described here for 
-the sake of transparency and reproducibility.
+This project utilizes data from the Ricci et al. electronic transport database, which is transformed into a format that 
+the CraTENet snd Random Forest models accept. Although files containing the training data are provided for download, and 
+can be immediately used with the models, the entire data preprocessing pipeline is described here for the sake of 
+transparency and reproducibility.
 
-### 1. Downloading the Ricci et al. database
+### 1. Downloading the Ricci et al. Database
 
 The full contents of the original Ricci et al. database can be downloaded from 
 [https://doi.org/10.5061/dryad.gn001](https://doi.org/10.5061/dryad.gn001). At the time of this writing, the dataset on
@@ -26,8 +26,9 @@ are compressed .json files, one for each compound (identified by their Materials
 thousands of compressed .json files, thus, it is perhaps best to extract a .tar file's contents into its own directory, 
 for ease of use.
 
-_NOTE: It is not required that the Ricci et al. database data be downloaded. This can skipped. This information is 
-provided for the sake of full reproducibility, should one wish to derive the training data from the original database._ 
+_NOTE: It is not strictly required that the Ricci et al. database data be downloaded. This can skipped. This information 
+is provided for the sake of full reproducibility, should one wish to derive the training data from the original 
+database._ 
 
 ### 2. Extracting the <i>S</i> and <i>σ</i> Tensor Diagonals and Band Gap
 
@@ -35,11 +36,11 @@ Assuming that the Ricci et al. electronic transport database files have been dow
 `etransport_data_1/` and `etransport_data_2`, the following script can be used to extract the <i>S</i> and <i>σ</i> 
 tensor diagonals (from which the target values will ultimately be derived):
 ```
-python bin/extract_data_xyz.py --dir ./etransport_data_1 ./etransport_data_2 --out all_data_xyz.csv
+python bin/extract_data_xyz.py --dir ./etransport_data_1 ./etransport_data_2 --out ricci_data_xyz.csv
 ```
 The same can be done to extract the band gaps associated with each compound:
 ```
-python bin/extract_data_gap.py --dir ./etransport_data_1 ./etransport_data_2 --out all_data_gap.csv
+python bin/extract_data_gap.py --dir ./etransport_data_1 ./etransport_data_2 --out ricci_data_gap.csv
 ```
 
 Alternatively, previously extracted <i>S</i> and <i>σ</i> tensor diagonals can be downloaded directly:
@@ -52,28 +53,103 @@ band gap data, use the `gap` argument instead:
 python bin/fetch_data.py gap
 ```
 
-_NOTE: It is not required that these extracted datasets be obtained. This can skipped. This information is 
+_NOTE: It is not strictly required that these extracted datasets be obtained. This can skipped. This information is 
 provided for the sake of full reproducibility, should one wish to derive the training data from the original database._ 
 
 ### 3. Computing the <i>S</i>, <i>σ</i> and <i>PF</i> Traces
 
 Once the tensor diagonals have been extracted, the traces of the <i>S</i> and <i>σ</i> tensors, and the power factor 
-(<i>PF</i>) trace, must be computed. These datasets can be created using the `all_data_xyz.csv` file.
+(<i>PF</i>) trace, must be computed. These datasets can be created using the `ricci_data_xyz.csv` file.
 
 For example, to create the Seebeck traces:
 ```
-$ python bin/compute_traces.py seebeck --data all_data_xyz.csv.gz --out seebeck_traces.csv.gz
+$ python bin/compute_traces.py seebeck --data ricci_data_xyz.csv.gz --out seebeck_mpid_traces.csv.gz
 ```
 Similarly, the `cond` argument can be used (in place of the `seebeck` argument) to compute the electronic 
 conductivity traces, and the `pf` argument can be used to compute the power factor traces.
 
 Alternatively previously computed traces can be downloaded directly:
 ```
-$ python bin/fetch_data.py seebeck_traces
+$ python bin/fetch_data.py seebeck_mpid_traces
 ```
-The `cond_traces` argument can be used (in place of the `seebeck_traces` argument) to download previously computed 
-electronic conductivity traces, and the `pf_traces` argument can be used to download previously computed power factor 
-traces. 
+The `cond_mpid_traces` argument can be used (in place of the `seebeck_mpid_traces` argument) to download previously 
+computed electronic conductivity traces, and the `pf_mpid_traces` argument can be used to download previously computed 
+power factor traces. 
 
-_NOTE: It is not required that these trace datasets be obtained. This can skipped. This information is 
+_NOTE: It is not strictly required that these trace datasets be obtained. This can skipped. This information is 
 provided for the sake of full reproducibility, should one wish to derive the training data from the original database._
+
+### 4. Disambiguating Duplicate Compositions
+
+The files produced by `compute_traces.py` contain a mapping from Materials Project ID to traces. However, we are 
+interested in compositions. Since there are multiple Materials Project IDs with the same composition in the Ricci et al.
+database, we must somehow disambiguate these duplicates. We choose to use the Materials Project ID corresponding to the 
+structure of the lowest energy polymorph. 
+```
+$ python bin/deduplicate_traces.py \
+--traces out/seebeck_mpid_traces.csv.gz out/seebeck_comp_traces.csv.gz \
+--traces out/cond_mpid_traces.csv.gz out/cond_comp_traces.csv.gz \
+--traces out/pf_mpid_traces.csv.gz out/pf_comp_traces.csv.gz \
+--formulas data/ricci_formulas.csv \
+--energies data/mp-2022-03-10-ricci_task_ener_per_atom.csv.gz \
+--gaps data/ricci_gaps.csv out/comp_gaps.csv
+```
+In this example, the `seebeck_comp_traces.csv.gz`, `cond_comp_traces.csv.gz`, `pf_comp_traces.csv.gz`, and 
+`comp_gaps.csv` files are produced as output. These files each represent a mapping from composition to either traces or
+gaps. As stated above, the compositions were chosen by selecting the structure with the lowest energy polymorph in cases
+where entries corresponded to the same composition. 
+
+### 5. Creating the Training Datasets
+
+Once the traces have been computed for each of the properties, they must be used to create training datasets that the 
+CraTENet and Random Forest models accept. This involves obtaining the compositions associated with the Materials Project 
+IDs in the Ricci et al. database, transforming them into representations usable by the model, and associating the 
+composition representations with the computed traces. 
+
+```
+$ python bin/create_rf_datasets.py \
+--seebeck ../out/seebeck_comp_traces.csv.gz rf_seebeck_dataset.pkl.gz \
+--log10cond ../out/cond_comp_traces.csv.gz rf_log10cond_dataset.pkl.gz \
+--log10pf ../out/pf_comp_traces.csv.gz rf_log10pf_dataset.pkl.gz
+```
+
+```
+$ python bin/create_rf_datasets.py \
+--seebeck ../out/seebeck_comp_traces.csv.gz rf_seebeck_gap_dataset.pkl.gz \
+--log10cond ../out/cond_comp_traces.csv.gz rf_log10cond_gap_dataset.pkl.gz \
+--log10pf ../out/pf_comp_traces.csv.gz rf_log10pf_gap_dataset.pkl.gz
+--gaps ../out/comp_gaps.csv
+```
+
+Alternatively, the pre-created datasets may be downloaded...
+
+
+_NOTE: It is not strictly required that the training datasets be created. They can instead be downloaded. This 
+information is provided for the sake of full reproducibility, should one wish to derive the training data from the 
+original database._
+
+
+***
+TODO 
+- we should not be disambiguating duplicate formulas when creating the datasets
+-- this is a problem specific to the Ricci data; if a user wanted to supply their own data to create a dataset,
+   they wouldn't be providing mpids; rather, they would be providing formulas and traces
+- the `*_traces.csv.gz` files should contain a formula instead of an mpid as part of the key
+- we need to disambiguate duplicates when computing the traces
+-- so `create_rf_datasets` should not require `--formulas` or `--energies`;
+```
+$ python bin/create_rf_datasets.py \
+--seebeck ../out/seebeck_traces.csv.gz rf_seebeck_dataset.pkl.gz \
+--log10cond ../out/cond_traces.csv.gz rf_log10cond_dataset.pkl.gz \
+--log10pf ../out/pf_traces.csv.gz rf_log10pf_dataset.pkl.gz
+```
+
+- perhaps there could be an intermediate step between traces and datasets, that de-duplicates
+-- this way we don't have to both keep track of GGA vs GGA+U and the lowest energy polymorph when we compute traces
+-- also there is no mixing of operations, which makes it easier to understand and debug
+1. Downloading the Ricci et al. Database -> original .json.gz files
+2. Extracting the S and σ Tensor Diagonals and Band Gap -> ricci_data_xyz.csv.gz, ricci_data_gap.csv.gz
+3. Computing the S, σ and PF Traces -> seebeck_mpid_traces.csv.gz, cond_mpid_traces.csv.gz, pf_mpid_traces.csv.gz
+4. Disambiguating Compositions -> comp_gaps.csv, seebeck_comp_traces.csv.gz, cond_comp_traces.csv.gz, pf_comp_traces.csv.gz
+5. Creating the Training Datasets -> rf_seebeck_gap_dataset.pkl.gz, ..., etc.
+*** 

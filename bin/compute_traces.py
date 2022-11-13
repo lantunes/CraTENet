@@ -28,7 +28,7 @@ def get_pf_trace(csv_line):
     return np.mean([pf1, pf2, pf3])
 
 
-def get_trace(prop):
+def get_trace_fn(prop):
     if prop == "seebeck":
         return get_seebeck_trace
     elif prop == "cond":
@@ -48,16 +48,16 @@ if __name__ == '__main__':
                         help="path to the output file; a .csv.gz extension should be used")
     args = parser.parse_args()
 
-    all_data_xyz_file = args.data
+    ricci_data_xyz_file = args.data
     out_trace_file = args.out
     property = args.prop
 
     all_keys_to_trace = {}
-    trace_fn = get_trace(property)
+    trace_fn = get_trace_fn(property)
 
     print("processing records...")
 
-    with gzip.open(all_data_xyz_file, "rt") as f:
+    with gzip.open(ricci_data_xyz_file, "rt") as f:
         reader = csv.reader(f)
         next(reader)  # skip header
         for line in reader:
@@ -86,6 +86,7 @@ if __name__ == '__main__':
             all_keys_to_trace[key][temperature][0] = trace
             all_keys_to_trace[key][temperature][1] = functional
 
+    print(f"number of entries: {len(all_keys_to_trace):,}")
     print(f"writing {out_trace_file} file...")
 
     with gzip.open(out_trace_file, "wt") as f:

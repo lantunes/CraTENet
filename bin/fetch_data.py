@@ -6,26 +6,35 @@ import requests
 
 
 STORAGE_URL = "https://cratenet-data.s3.amazonaws.com"
-ALL_DATA_XYZ = f"{STORAGE_URL}/all_data_xyz.csv.gz"
-ALL_DATA_GAP = f"{STORAGE_URL}/all_data_gap.csv.gz"
-SEEBECK_TRACES = f"{STORAGE_URL}/seebeck_traces.csv.gz"
-COND_TRACES = f"{STORAGE_URL}/cond_traces.csv.gz"
-PF_TRACES = f"{STORAGE_URL}/pf_traces.csv.gz"
+RICCI_DATA_XYZ = f"{STORAGE_URL}/ricci_data_xyz.csv.gz"
+RICCI_DATA_GAP = f"{STORAGE_URL}/ricci_data_gap.csv.gz"
+SEEBECK_MPID_TRACES = f"{STORAGE_URL}/seebeck_mpid_traces.csv.gz"
+SEEBECK_COMP_TRACES = f"{STORAGE_URL}/seebeck_comp_traces.csv.gz"
+COND_MPID_TRACES = f"{STORAGE_URL}/cond_mpid_traces.csv.gz"
+COND_COMP_TRACES = f"{STORAGE_URL}/cond_comp_traces.csv.gz"
+PF_MPID_TRACES = f"{STORAGE_URL}/pf_mpid_traces.csv.gz"
+PF_COMP_TRACES = f"{STORAGE_URL}/pf_comp_traces.csv.gz"
 
 BLOCK_SIZE = 1024
 
 
 def get_url(option):
     if option == "gap":
-        return ALL_DATA_GAP
+        return RICCI_DATA_GAP
     elif option == "xyz":
-        return ALL_DATA_XYZ
-    elif option == "seebeck_traces":
-        return SEEBECK_TRACES
-    elif option == "cond_traces":
-        return COND_TRACES
-    elif option == "pf_traces":
-        return PF_TRACES
+        return RICCI_DATA_XYZ
+    elif option == "seebeck_mpid_traces":
+        return SEEBECK_MPID_TRACES
+    elif option == "seebeck_comp_traces":
+        return SEEBECK_COMP_TRACES
+    elif option == "cond_mpid_traces":
+        return COND_MPID_TRACES
+    elif option == "cond_comp_traces":
+        return COND_COMP_TRACES
+    elif option == "pf_mpid_traces":
+        return PF_MPID_TRACES
+    elif option == "pf_comp_traces":
+        return PF_COMP_TRACES
     else:
         raise Exception(f"unsupported option: {option}")
 
