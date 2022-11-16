@@ -47,12 +47,16 @@ if __name__ == '__main__':
                         help="the first arg is the path the .csv file containing a mapping from MP IDs to gaps; the "
                              "second arg is a path to the deduplicated .csv gaps file that will be written, containing "
                              "a mapping from compositions to gaps")
+    parser.add_argument("--mpids", nargs="?", required=False, type=str,
+                        help="path to the .csv file containing a mapping from compositions to the MP ID they represent,"
+                             " after disambiguating the duplicates")
     args = parser.parse_args()
 
     all_gaps_file = args.gaps[0]
     target_gaps_file = args.gaps[1]
     mp_all_ener_per_atom_file = args.energies[0]
     all_formulas_file = args.formulas[0]
+    mpids_file = args.mpids
     traces = args.traces
 
     mpid_to_gaps = get_all_mpid_to_gaps(all_gaps_file)
@@ -94,7 +98,7 @@ if __name__ == '__main__':
                             entry.extend(mpid_traces[(mpid, doping_type, doping_level)])
                             writer.writerow(entry)
                             n_entries += 1
-                print(f"number of entries: {n_entries:,}")
+                print(f"number of entries written: {n_entries:,}")
 
     print(f"writing {target_gaps_file}...")
 
@@ -105,4 +109,12 @@ if __name__ == '__main__':
             writer.writerow([formula, gap])
             n_entries += 1
 
-    print(f"number of entries: {n_entries:,}")
+    print(f"number of entries written: {n_entries:,}")
+
+    if mpids_file is not None:
+        print(f"writing {mpids_file}...")
+        with open(mpids_file, "wt") as f:
+            writer = csv.writer(f)
+            for formula, mpid in formula_to_mpid.items():
+                writer.writerow([formula, mpid])
+        print(f"number of entries written: {len(formula_to_mpid):,}")

@@ -1,8 +1,10 @@
-import os
+import sys
+sys.path.extend([".", ".."])
+import argparse
 from pymatgen import Composition
 from skipatom import OneHotVectors
 from matminer.featurizers.composition import Meredig
-import csv
+from cratenet.utils import DatasetInputs
 import gzip
 import numpy as np
 from tqdm import tqdm
@@ -11,201 +13,106 @@ try:
     import cPickle as pickle
 except ImportError:
     import pickle
+
+np.seterr(divide="ignore", invalid="ignore")
     
-SUPPORTED_ATOMS = ["Si", "C", "Pb", "I", "Br", "Cl", "Eu", "O", "Fe", "Sb", "In", "S", "N", "U", "Mn", "Lu", "Se",
-                   "Tl", "Hf", "Ir", "Ca", "Ta", "Cr", "K", "Pm", "Mg", "Zn", "Cu", "Sn", "Ti", "B", "W", "P", "H",
-                   "Pd", "As", "Co", "Np", "Tc", "Hg", "Pu", "Al", "Tm", "Tb", "Ho", "Nb", "Ge", "Zr", "Cd", "V", "Sr",
-                   "Ni", "Rh", "Th", "Na", "Ru", "La", "Re", "Y", "Er", "Ce", "Pt", "Ga", "Li", "Cs", "F", "Ba", "Te",
-                   "Mo", "Gd", "Pr", "Bi", "Sc", "Ag", "Rb", "Dy", "Yb", "Nd", "Au", "Os", "Pa", "Sm", "Be", "Ac",
-                   "Xe", "Kr"]
-EXCLUDED_ATOMS = ["He", "Ar", "Ne"]
-
-
-def get_all_mpid_to_gaps(all_gaps_file):
-    mpid_to_gap = {}
-    with open(all_gaps_file, "rt") as f:
-        reader = csv.reader(f)
-        for line in reader:
-            mpid_to_gap[line[0]] = float(line[1])
-    return mpid_to_gap
-
-
-def get_all_mpid_to_ener_per_atom(mp_all_ener_per_atom_file):
-    mpid_to_form_e = {}
-    with gzip.open(mp_all_ener_per_atom_file, "rt") as f:
-        reader = csv.reader(f)
-        for line in reader:
-            mpid_to_form_e[line[0]] = float(line[2])
-    return mpid_to_form_e
-
-
-def get_mpid_to_traces(traces_file, is_log10=False):
-    mpid_to_traces = {}
-    with gzip.open(traces_file, "rt") as f:
-        reader = csv.reader(f)
-        for line in reader:
-
-            if is_log10:
-                vals = [np.log10(float(line[i])) for i in range(3, 16)]
-                vals = [0.0 if np.isneginf(val) or np.isnan(val) or np.isinf(val) else val for val in vals]
-            else:
-                vals = [float(line[i]) for i in range(3, 16)]
-
-            key = (line[0], line[1], line[2])
-            mpid_to_traces[key] = vals
-    return mpid_to_traces
+ATOMS = ["Si", "C", "Pb", "I", "Br", "Cl", "Eu", "O", "Fe", "Sb", "In", "S", "N", "U", "Mn", "Lu", "Se", "Tl", "Hf",
+         "Ir", "Ca", "Ta", "Cr", "K", "Pm", "Mg", "Zn", "Cu", "Sn", "Ti", "B", "W", "P", "H", "Pd", "As", "Co", "Np",
+         "Tc", "Hg", "Pu", "Al", "Tm", "Tb", "Ho", "Nb", "Ge", "Zr", "Cd", "V", "Sr", "Ni", "Rh", "Th", "Na", "Ru",
+         "La", "Re", "Y", "Er", "Ce", "Pt", "Ga", "Li", "Cs", "F", "Ba", "Te", "Mo", "Gd", "Pr", "Bi", "Sc", "Ag", "Rb",
+         "Dy", "Yb", "Nd", "Au", "Os", "Pa", "Sm", "Be", "Ac", "Xe", "Kr"]
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--seebeck", nargs=2, required=True, type=str,
+                        help="the first arg is a path to the deduplicated traces file for the Seebeck (must be a "
+                             ".csv.gz file); the second arg is the path the destination file containing the "
+                             "dataset (should contain a .csv.gz extension)")
+    parser.add_argument("--log10cond", nargs=2, required=True, type=str,
+                        help="the first arg is a path to the deduplicated traces file for the electronic conductivity "
+                             "(must be a  .csv.gz file); the second arg is the path the destination file containing "
+                             "the dataset (should contain a .csv.gz extension)")
+    parser.add_argument("--log10pf", nargs=2, required=True, type=str,
+                        help="the first arg is a path to the deduplicated traces file for the power factor "
+                             "(must be a  .csv.gz file); the second arg is the path the destination file containing "
+                             "the dataset (should contain a .csv.gz extension)")
+    parser.add_argument("--gaps", nargs="?", required=False, type=str,
+                        help="path to the .csv file containing a mapping from composition to corresponding band gap")
+    parser.add_argument("--metadata", nargs="?", required=False, type=str,
+                        help="path to the .csv file containing a mapping from composition to associated metadata "
+                             "(e.g. MP ID)")
+    parser.add_argument("--atoms", nargs="?", required=False, type=str,
+                        help="path to atoms file: a file containing a list of the supported atoms, "
+                             "one atom per line; only compounds containing atoms in this list will be included "
+                             "in the dataset; a default set of atoms will be used if this argument is not provided")
+    args = parser.parse_args()
 
-    """
-    Inputs
-    """
-    seebeck_traces_file = "../out/seebeck_traces.csv.gz"
-    cond_traces_file = "../out/cond_traces.csv.gz"
-    pf_traces_file = "../out/pf_traces.csv.gz"
-    # all the formulas of the Ricci database, associated with their MP ID
-    all_formulas_file = "../data/ricci_formulas.csv"
-    all_gaps_file = "../data/ricci_gaps.csv"  # use the Ricci database gaps
-    mp_all_ener_per_atom_file = "../data/mp-2022-03-10-ricci_task_ener_per_atom.csv.gz"
-    data_out_dir = "../out/datasets_minpol"
-    supported_atoms = SUPPORTED_ATOMS
-    excluded_atoms = EXCLUDED_ATOMS
+    seebeck_traces_file = args.seebeck[0]
+    meredig_seebeck_file = args.seebeck[1]
+    cond_traces_file = args.log10cond[0]
+    meredig_log10cond_file = args.log10cond[1]
+    pf_traces_file = args.log10pf[0]
+    meredig_log10pf_file = args.log10pf[1]
+    comp_gaps_file = args.gaps
+    metadata_file = args.metadata
 
-    """
-    Outputs
-    """
-    meredig_seebeck_file = "minpol_meredig_seebeck_nD_nT_nL.pkl.gz"
-    meredig_gap_seebeck_file = "minpol_meredig+gap_seebeck_nD_nT_nL.pkl.gz"
-    meredig_log10cond_file = "minpol_meredig_log10cond_nD_nT_nL.pkl.gz"
-    meredig_gap_log10cond_file = "minpol_meredig+gap_log10cond_nD_nT_nL.pkl.gz"
-    meredig_log10pf_file = "minpol_meredig_log10pf_nD_nT_nL.pkl.gz"
-    meredig_gap_log10pf_file = "minpol_meredig+gap_log10pf_nD_nT_nL.pkl.gz"
+    if args.atoms is not None:
+        print(f"loading supported atoms from {args.atoms} ...")
+        with open(args.atoms, "rt") as f:
+            atoms = [line.strip() for line in f.readlines()]
+    else:
+        atoms = ATOMS
+    supported_atoms = set(atoms)
 
+    print("reading traces files...")
+    inputs = DatasetInputs(seebeck_traces_file, cond_traces_file, pf_traces_file, comp_gaps_file, metadata_file)
 
-    mpid_to_seebeck_traces = get_mpid_to_traces(seebeck_traces_file)
-    mpid_to_log10cond_traces = get_mpid_to_traces(cond_traces_file, is_log10=True)
-    mpid_to_log10pf_traces = get_mpid_to_traces(pf_traces_file, is_log10=True)
-
-    mpid_to_gaps = get_all_mpid_to_gaps(all_gaps_file)
-    mpid_to_ener_per_atom = get_all_mpid_to_ener_per_atom(mp_all_ener_per_atom_file)
-
-    ohv = OneHotVectors(elems=supported_atoms)
+    ohv = OneHotVectors(elems=atoms)
 
     meredig = Meredig()
 
-    formula_to_ener_per_atom = {}
-    formula_to_seebecks = {}
-    formula_to_log10conds = {}
-    formula_to_log10pfs = {}
-    formula_to_gap = {}
-    formula_to_mpid = {}
-    formula_to_comp = {}
-    with open(all_formulas_file, "rt") as in_f:
-        reader = csv.reader(in_f)
-        for line in tqdm(reader):
-            mpid = line[0]
-            formula = line[1]
-
-            ener_per_atom = mpid_to_ener_per_atom[mpid]
-            composition = Composition(formula)
-            if any([e.name in excluded_atoms for e in composition.elements]):
-                continue
-
-            seebeck_traces_combined = list(mpid_to_seebeck_traces[(mpid, "p", "1e16")])
-            seebeck_traces_combined.extend(mpid_to_seebeck_traces[(mpid, "n", "1e16")])
-            seebeck_traces_combined.extend(mpid_to_seebeck_traces[(mpid, "p", "1e17")])
-            seebeck_traces_combined.extend(mpid_to_seebeck_traces[(mpid, "n", "1e17")])
-            seebeck_traces_combined.extend(mpid_to_seebeck_traces[(mpid, "p", "1e18")])
-            seebeck_traces_combined.extend(mpid_to_seebeck_traces[(mpid, "n", "1e18")])
-            seebeck_traces_combined.extend(mpid_to_seebeck_traces[(mpid, "p", "1e19")])
-            seebeck_traces_combined.extend(mpid_to_seebeck_traces[(mpid, "n", "1e19")])
-            seebeck_traces_combined.extend(mpid_to_seebeck_traces[(mpid, "p", "1e20")])
-            seebeck_traces_combined.extend(mpid_to_seebeck_traces[(mpid, "n", "1e20")])
-
-            log10cond_traces_combined = list(mpid_to_log10cond_traces[(mpid, "p", "1e16")])
-            log10cond_traces_combined.extend(mpid_to_log10cond_traces[(mpid, "n", "1e16")])
-            log10cond_traces_combined.extend(mpid_to_log10cond_traces[(mpid, "p", "1e17")])
-            log10cond_traces_combined.extend(mpid_to_log10cond_traces[(mpid, "n", "1e17")])
-            log10cond_traces_combined.extend(mpid_to_log10cond_traces[(mpid, "p", "1e18")])
-            log10cond_traces_combined.extend(mpid_to_log10cond_traces[(mpid, "n", "1e18")])
-            log10cond_traces_combined.extend(mpid_to_log10cond_traces[(mpid, "p", "1e19")])
-            log10cond_traces_combined.extend(mpid_to_log10cond_traces[(mpid, "n", "1e19")])
-            log10cond_traces_combined.extend(mpid_to_log10cond_traces[(mpid, "p", "1e20")])
-            log10cond_traces_combined.extend(mpid_to_log10cond_traces[(mpid, "n", "1e20")])
-
-            log10pf_traces_combined = list(mpid_to_log10pf_traces[(mpid, "p", "1e16")])
-            log10pf_traces_combined.extend(mpid_to_log10pf_traces[(mpid, "n", "1e16")])
-            log10pf_traces_combined.extend(mpid_to_log10pf_traces[(mpid, "p", "1e17")])
-            log10pf_traces_combined.extend(mpid_to_log10pf_traces[(mpid, "n", "1e17")])
-            log10pf_traces_combined.extend(mpid_to_log10pf_traces[(mpid, "p", "1e18")])
-            log10pf_traces_combined.extend(mpid_to_log10pf_traces[(mpid, "n", "1e18")])
-            log10pf_traces_combined.extend(mpid_to_log10pf_traces[(mpid, "p", "1e19")])
-            log10pf_traces_combined.extend(mpid_to_log10pf_traces[(mpid, "n", "1e19")])
-            log10pf_traces_combined.extend(mpid_to_log10pf_traces[(mpid, "p", "1e20")])
-            log10pf_traces_combined.extend(mpid_to_log10pf_traces[(mpid, "n", "1e20")])
-
-            if formula not in formula_to_ener_per_atom or ener_per_atom < formula_to_ener_per_atom[formula]:
-                # either the formula hasn't been seen yet,
-                #  or we have a lower energy polymorph and we'll use this one instead
-                formula_to_ener_per_atom[formula] = ener_per_atom
-                formula_to_seebecks[formula] = seebeck_traces_combined
-                formula_to_log10conds[formula] = log10cond_traces_combined
-                formula_to_log10pfs[formula] = log10pf_traces_combined
-                formula_to_gap[formula] = mpid_to_gaps[mpid]
-                formula_to_mpid[formula] = mpid
-                formula_to_comp[formula] = composition
-
+    print("creating datasets...")
     meredig_seebeck_dataset = []
-    meredig_gap_seebeck_dataset = []
     meredig_log10cond_dataset = []
-    meredig_gap_log10cond_dataset = []
     meredig_log10pf_dataset = []
-    meredig_gap_log10pf_dataset = []
     metadata = []
-    for formula in tqdm(formula_to_seebecks):
-        composition = formula_to_comp[formula]
-        seebeck_traces = formula_to_seebecks[formula]
-        log10cond_traces = formula_to_log10conds[formula]
-        log10pf_traces = formula_to_log10pfs[formula]
-        gap = formula_to_gap[formula]
-        mpid = formula_to_mpid[formula]
+    formulas = {formula for formula, _, _ in inputs.comp_to_seebeck_traces}
+    for formula in tqdm(formulas):
+        composition = Composition(formula)
+        if any([e.name not in supported_atoms for e in composition.elements]):
+            continue
 
         meredig_vec = meredig.featurize(composition)  # it's not cheap to create the Meredig vector
+
+        seebeck_traces_combined = DatasetInputs.combine_traces(formula, inputs.comp_to_seebeck_traces)
+        log10cond_traces_combined = DatasetInputs.combine_traces(formula, inputs.comp_to_log10cond_traces)
+        log10pf_traces_combined = DatasetInputs.combine_traces(formula, inputs.comp_to_log10pf_traces)
+
         # drop columns 108 and 109 (apparently range and mean AtomicRadius), which contain NaNs in some records
         meredig_vec = [i for j, i in enumerate(meredig_vec) if j not in [108, 109]]
-        meredig_vec_with_gap = list(meredig_vec) + [gap]
-        meredig_seebeck_dataset.append([meredig_vec, seebeck_traces])
-        meredig_gap_seebeck_dataset.append([meredig_vec_with_gap, seebeck_traces])
-        meredig_log10cond_dataset.append([meredig_vec, log10cond_traces])
-        meredig_gap_log10cond_dataset.append([meredig_vec_with_gap, log10cond_traces])
-        meredig_log10pf_dataset.append([meredig_vec, log10pf_traces])
-        meredig_gap_log10pf_dataset.append([meredig_vec_with_gap, log10pf_traces])
+        if inputs.include_gap:
+            meredig_vec = list(meredig_vec) + [inputs.comps_to_gaps[formula]]
 
-        metadata.append((formula, mpid))
+        meredig_seebeck_dataset.append([meredig_vec, seebeck_traces_combined])
+        meredig_log10cond_dataset.append([meredig_vec, log10cond_traces_combined])
+        meredig_log10pf_dataset.append([meredig_vec, log10pf_traces_combined])
 
-    print(len(meredig_seebeck_dataset))
-    print(len(meredig_gap_seebeck_dataset))
-    print(len(meredig_log10cond_dataset))
-    print(len(meredig_gap_log10cond_dataset))
-    print(len(meredig_log10pf_dataset))
-    print(len(meredig_gap_log10pf_dataset))
-    print(len(metadata))
+        metadata.append((formula, inputs.comp_to_metadata[formula] if inputs.has_metadata else ""))
 
-    with gzip.open(os.path.join(data_out_dir, meredig_seebeck_file), "wb") as f:
+    print(f"number of entries in Seebeck dataset: {len(meredig_seebeck_dataset):,}")
+    print(f"number of entries in log10 electronic conductivity dataset: {len(meredig_log10cond_dataset):,}")
+    print(f"number of entries in log10 PF dataset: {len(meredig_log10pf_dataset):,}")
+    print(f"number of metadata entries: {len(metadata):,}")
+
+    print(f"writing {meredig_seebeck_file}...")
+    with gzip.open(meredig_seebeck_file, "wb") as f:
         pickle.dump((metadata, meredig_seebeck_dataset), f, protocol=pickle.HIGHEST_PROTOCOL)
 
-    with gzip.open(os.path.join(data_out_dir, meredig_gap_seebeck_file), "wb") as f:
-        pickle.dump((metadata, meredig_gap_seebeck_dataset), f, protocol=pickle.HIGHEST_PROTOCOL)
-
-    with gzip.open(os.path.join(data_out_dir, meredig_log10cond_file), "wb") as f:
+    print(f"writing {meredig_log10cond_file}...")
+    with gzip.open(meredig_log10cond_file, "wb") as f:
         pickle.dump((metadata, meredig_log10cond_dataset), f, protocol=pickle.HIGHEST_PROTOCOL)
 
-    with gzip.open(os.path.join(data_out_dir, meredig_gap_log10cond_file), "wb") as f:
-        pickle.dump((metadata, meredig_gap_log10cond_dataset), f, protocol=pickle.HIGHEST_PROTOCOL)
-
-    with gzip.open(os.path.join(data_out_dir, meredig_log10pf_file), "wb") as f:
+    print(f"writing {meredig_log10pf_file}...")
+    with gzip.open(meredig_log10pf_file, "wb") as f:
         pickle.dump((metadata, meredig_log10pf_dataset), f, protocol=pickle.HIGHEST_PROTOCOL)
-
-    with gzip.open(os.path.join(data_out_dir, meredig_gap_log10pf_file), "wb") as f:
-        pickle.dump((metadata, meredig_gap_log10pf_dataset), f, protocol=pickle.HIGHEST_PROTOCOL)
