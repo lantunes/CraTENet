@@ -1,6 +1,7 @@
 import csv
 import gzip
 import numpy as np
+from scipy import sparse
 from tqdm import tqdm
 
 
@@ -68,3 +69,36 @@ class DatasetInputs(object):
         traces_combined.extend(comp_to_traces[(composition, "p", "1e+20")])
         traces_combined.extend(comp_to_traces[(composition, "n", "1e+20")])
         return traces_combined
+
+
+def get_transformer_input(comp, dictionary, embeddings, max_elements, gap=None):
+    unscaled_vectors = np.zeros((max_elements, len(embeddings[0])))
+    amounts = np.zeros(max_elements)
+
+    for i, e in enumerate(comp.elements):
+        unscaled_vectors[i] = np.array(embeddings[dictionary[e.name]])
+        amounts[i] = comp.to_reduced_dict[e.name]
+
+    amounts = amounts / sum(amounts)
+
+    matrix = sparse.coo_matrix(unscaled_vectors.tolist())
+
+    if gap is not None:
+        return matrix, amounts, gap
+    return matrix, amounts
+
+
+def read_atom_vectors_from_csv(vectors_file):
+    dictionary = {}
+    embeddings = []
+    with open(vectors_file, "rt") as f:
+        reader = csv.reader(f)
+        header = next(reader)
+        num_components = int(header[-1]) + 1
+        for i, line in enumerate(reader):
+            atom = line[0]
+            vals = [float(v) for v in line[1:]]
+            assert len(vals) == num_components
+            dictionary[atom] = i
+            embeddings.append(vals)
+    return dictionary, embeddings

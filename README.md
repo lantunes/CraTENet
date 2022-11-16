@@ -150,6 +150,25 @@ $ python bin/create_rf_datasets.py \
 --metadata out/comp_to_mpid.csv
 ```
 
+```
+$ python bin/create_cratenet_datasets.py \
+--seebeck out/seebeck_comp_traces.csv.gz out/cratenet_seebeck_dataset.pkl.gz \
+--log10cond out/cond_comp_traces.csv.gz out/cratenet_log10cond_dataset.pkl.gz \
+--log10pf out/pf_comp_traces.csv.gz out/cratenet_log10pf_dataset.pkl.gz \
+--atom-vectors data/skipatom200_20201009_induced.csv \
+--metadata out/comp_to_mpid.csv
+```
+
+```
+$ python bin/create_cratenet_datasets.py \
+--seebeck out/seebeck_comp_traces.csv.gz out/cratenet_seebeck_gap_dataset.pkl.gz \
+--log10cond out/cond_comp_traces.csv.gz out/cratenet_log10cond_gap_dataset.pkl.gz \
+--log10pf out/pf_comp_traces.csv.gz out/cratenet_log10pf_gap_dataset.pkl.gz \
+--atom-vectors data/skipatom200_20201009_induced.csv \
+--gaps out/comp_gaps.csv \
+--metadata out/comp_to_mpid.csv
+```
+
 Alternatively, the pre-created datasets may be downloaded...  #TODO
 
 

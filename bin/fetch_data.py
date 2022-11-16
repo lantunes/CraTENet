@@ -22,6 +22,12 @@ RF_LOG10PF_DATASET = f"{STORAGE_URL}/rf_log10pf_dataset.pkl.gz"
 RF_SEEBECK_GAP_DATASET = f"{STORAGE_URL}/rf_seebeck_gap_dataset.pkl.gz"
 RF_LOG10COND_GAP_DATASET = f"{STORAGE_URL}/rf_log10cond_gap_dataset.pkl.gz"
 RF_LOG10PF_GAP_DATASET = f"{STORAGE_URL}/rf_log10pf_gap_dataset.pkl.gz"
+CRATENET_SEEBECK_DATASET = f"{STORAGE_URL}/cratenet_seebeck_dataset.pkl.gz"
+CRATENET_LOG10COND_DATASET = f"{STORAGE_URL}/cratenet_log10cond_dataset.pkl.gz"
+CRATENET_LOG10PF_DATASET = f"{STORAGE_URL}/cratenet_log10pf_dataset.pkl.gz"
+CRATENET_SEEBECK_GAP_DATASET = f"{STORAGE_URL}/cratenet_seebeck_gap_dataset.pkl.gz"
+CRATENET_LOG10COND_GAP_DATASET = f"{STORAGE_URL}/cratenet_log10cond_gap_dataset.pkl.gz"
+CRATENET_LOG10PF_GAP_DATASET = f"{STORAGE_URL}/cratenet_log10pf_gap_dataset.pkl.gz"
 
 BLOCK_SIZE = 1024
 
@@ -59,6 +65,18 @@ def get_url(option):
         return RF_LOG10COND_GAP_DATASET
     elif option == "rf_log10pf_gap_dataset":
         return RF_LOG10PF_GAP_DATASET
+    elif option == "cratenet_seebeck_dataset":
+        return CRATENET_SEEBECK_DATASET
+    elif option == "cratenet_log10cond_dataset":
+        return CRATENET_LOG10COND_DATASET
+    elif option == "cratenet_log10pf_dataset":
+        return CRATENET_LOG10PF_DATASET
+    elif option == "cratenet_seebeck_gap_dataset":
+        return CRATENET_SEEBECK_GAP_DATASET
+    elif option == "cratenet_log10cond_gap_dataset":
+        return CRATENET_LOG10COND_GAP_DATASET
+    elif option == "cratenet_log10pf_gap_dataset":
+        return CRATENET_LOG10PF_GAP_DATASET
     else:
         raise Exception(f"unsupported option: {option}")
 
@@ -81,7 +99,9 @@ if __name__ == '__main__':
     type_choices = ["gap", "xyz", "seebeck_mpid_traces", "cond_mpid_traces", "pf_mpid_traces", "seebeck_comp_traces",
                     "cond_comp_traces", "pf_comp_traces", "comp_gaps", "comp_to_mpid", "rf_seebeck_dataset",
                     "rf_log10cond_dataset", "rf_log10pf_dataset",  "rf_seebeck_gap_dataset", "rf_log10cond_gap_dataset",
-                    "rf_log10pf_gap_dataset"]
+                    "rf_log10pf_gap_dataset", "cratenet_seebeck_dataset", "cratenet_log10cond_dataset",
+                    "cratenet_log10pf_dataset", "cratenet_seebeck_gap_dataset", "cratenet_log10cond_gap_dataset",
+                    "cratenet_log10pf_gap_dataset"]
     parser.add_argument("type", choices=type_choices,
                         help=f"Supported options: {', '.join(type_choices)}")
     parser.add_argument("--out", "-o", action="store",

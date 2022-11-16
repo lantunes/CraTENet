@@ -16,3 +16,5 @@ dependencies:
       - skipatom==1.2.5
       - matminer==0.6.3
       - smact==2.3.1
+      - requests~=2.28.1
+      - scipy~=1.5.3
