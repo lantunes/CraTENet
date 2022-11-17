@@ -181,6 +181,12 @@ original database._
 
 #TODO
 
+```
+$ python bin/cross_validate_rf.py \
+--dataset out/rf_seebeck_dataset.pkl.gz \
+--folds 2
+```
+
 
 ***
 TODO 
