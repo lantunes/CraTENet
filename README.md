@@ -8,6 +8,16 @@ the Tensorflow and Keras frameworks. It also provides a means of obtaining the d
 
 <img src="resources/cratenet-arch.png" width="60%"/>
 
+## Table of Contents
+
+- [Obtaining the Training Data: The Dataset Preprocessing Pipeline](#obtaining-the-training-data-the-dataset-preprocessing-pipeline)
+  - [1. Downloading the Ricci et al. Database](#1-downloading-the-ricci-et-al-database)
+  - [2. Extracting the <i>S</i> and <i>σ</i> Tensor Diagonals and Band Gap](#2-extracting-the-isi-and-ii-tensor-diagonals-and-band-gap)
+  - [3. Computing the <i>S</i>, <i>σ</i> and <i>PF</i> Traces](#3-computing-the-isi-ii-and-ipfi-traces)
+  - [4. Disambiguating Duplicate Compositions](#4-disambiguating-duplicate-compositions)
+  - [5. Creating the Training Datasets](#5-creating-the-training-datasets)
+- [Training the Models](#training-the-models)
+
 ## Obtaining the Training Data: The Dataset Preprocessing Pipeline
 
 This project utilizes data from the Ricci et al. electronic transport database, which is transformed into a format that 
@@ -111,6 +121,10 @@ gaps. As stated above, the compositions were chosen by selecting the structure w
 where entries corresponded to the same composition. The `comp_to_mpid.csv` file, containing a mapping from compositions
 to the MP ID selected, is also produced.
 
+_NOTE: It is not strictly required that these files be created. They can instead be downloaded. This 
+information is provided for the sake of full reproducibility, should one wish to derive the training data from the 
+original database._
+
 Alternatively, previously deduplicated trace files can be downloaded...  #TODO 
 
 ```
@@ -120,11 +134,6 @@ $ python bin/fetch_data.py pf_comp_traces
 $ python bin/fetch_data.py comp_gaps
 $ python bin/fetch_data.py comp_to_mpid
 ```
-
-_NOTE: It is not strictly required that these files be created. They can instead be downloaded. This 
-information is provided for the sake of full reproducibility, should one wish to derive the training data from the 
-original database._
-
 
 ### 5. Creating the Training Datasets
 
@@ -169,12 +178,11 @@ $ python bin/create_cratenet_datasets.py \
 --metadata out/comp_to_mpid.csv
 ```
 
-Alternatively, the pre-created datasets may be downloaded...  #TODO
-
-
 _NOTE: It is not strictly required that the training datasets be created. They can instead be downloaded. This 
 information is provided for the sake of full reproducibility, should one wish to derive the training data from the 
 original database._
+
+Alternatively, the pre-created datasets may be downloaded...  #TODO
 
 
 ## Training the Models
@@ -182,9 +190,7 @@ original database._
 #TODO
 
 ```
-$ python bin/cross_validate_rf.py \
---dataset out/rf_seebeck_dataset.pkl.gz \
---folds 2
+$ python bin/cross_validate_rf.py --dataset out/rf_seebeck_dataset.pkl.gz
 ```
 
 
