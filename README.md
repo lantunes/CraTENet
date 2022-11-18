@@ -12,8 +12,8 @@ the Tensorflow and Keras frameworks. It also provides a means of obtaining the d
 
 - [Obtaining the Training Data: The Dataset Preprocessing Pipeline](#obtaining-the-training-data-the-dataset-preprocessing-pipeline)
   - [1. Downloading the Ricci et al. Database](#1-downloading-the-ricci-et-al-database)
-  - [2. Extracting the <i>S</i> and <i>σ</i> Tensor Diagonals and Band Gap](#2-extracting-the-isi-and-ii-tensor-diagonals-and-band-gap)
-  - [3. Computing the <i>S</i>, <i>σ</i> and <i>PF</i> Traces](#3-computing-the-isi-ii-and-ipfi-traces)
+  - [2. Extracting the _S_ and _σ_ Tensor Diagonals and Band Gap](#2-extracting-the-_s_-and-__-tensor-diagonals-and-band-gap)
+  - [3. Computing the _S_, _σ_ and _PF_ Traces](#3-computing-the-_s_-__-and-_pf_-traces)
   - [4. Disambiguating Duplicate Compositions](#4-disambiguating-duplicate-compositions)
   - [5. Creating the Training Datasets](#5-creating-the-training-datasets)
 - [Training the Models](#training-the-models)
@@ -42,10 +42,10 @@ information is provided for the sake of full reproducibility, should one wish to
 original database._ 
 
 
-### 2. Extracting the <i>S</i> and <i>σ</i> Tensor Diagonals and Band Gap
+### 2. Extracting the _S_ and _σ_ Tensor Diagonals and Band Gap
 
 Assuming that the Ricci et al. electronic transport database files have been downloaded and exist in two directories, 
-`etransport_data_1/` and `etransport_data_2/`, the following script can be used to extract the <i>S</i> and <i>σ</i> 
+`etransport_data_1/` and `etransport_data_2/`, the following script can be used to extract the _S_ and _σ_ 
 tensor diagonals (from which the target values will ultimately be derived):
 ```
 python bin/extract_data_xyz.py \
@@ -59,7 +59,7 @@ python bin/extract_data_gap.py \
 --out ricci_data_gap.csv
 ```
 
-Alternatively, previously extracted <i>S</i> and <i>σ</i> tensor diagonals can be downloaded directly:
+Alternatively, previously extracted _S_ and _σ_ tensor diagonals can be downloaded directly:
 ```
 python bin/fetch_data.py xyz
 ```
@@ -73,10 +73,10 @@ _NOTE: It is not strictly required that these extracted datasets be obtained. Th
 provided for the sake of full reproducibility, should one wish to derive the training data from the original database._ 
 
 
-### 3. Computing the <i>S</i>, <i>σ</i> and <i>PF</i> Traces
+### 3. Computing the _S_, _σ_ and _PF_ Traces
 
-Once the tensor diagonals have been extracted, the traces of the <i>S</i> and <i>σ</i> tensors, and the power factor 
-(<i>PF</i>) trace, must be computed. These datasets can be created using the `ricci_data_xyz.csv` file.
+Once the tensor diagonals have been extracted, the traces of the _S_ and _σ_ tensors, and the power factor 
+(_PF_) trace, must be computed. These datasets can be created using the `ricci_data_xyz.csv` file.
 
 For example, to create the Seebeck traces:
 ```
