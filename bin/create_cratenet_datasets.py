@@ -4,7 +4,8 @@ import argparse
 from pymatgen import Composition
 import gzip
 from tqdm import tqdm
-from cratenet.utils import DatasetInputs, get_transformer_input, read_atom_vectors_from_csv
+from cratenet.dataset import DatasetInputs, read_atom_vectors_from_csv
+from cratenet.models import featurize_comp_for_cratenet
 import numpy as np
 
 try:
@@ -44,11 +45,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     seebeck_traces_file = args.seebeck[0]
-    transformer_seebeck_file = args.seebeck[1]
+    cratenet_seebeck_file = args.seebeck[1]
     cond_traces_file = args.log10cond[0]
-    transformer_log10cond_file = args.log10cond[1]
+    cratenet_log10cond_file = args.log10cond[1]
     pf_traces_file = args.log10pf[0]
-    transformer_log10pf_file = args.log10pf[1]
+    cratenet_log10pf_file = args.log10pf[1]
     max_elements = args.max_elements
     comp_gaps_file = args.gaps
     metadata_file = args.metadata
@@ -56,17 +57,17 @@ if __name__ == '__main__':
     print(f"maximum number of elements in a composition: {max_elements}")
 
     print(f"reading atom vectors from {args.atom_vectors}...")
-    atom_dictionary, atom_vectors = read_atom_vectors_from_csv(args.atom_vectors)
-    supported_atoms = atom_dictionary.keys()
+    atom_dict, atom_vectors = read_atom_vectors_from_csv(args.atom_vectors)
+    supported_atoms = atom_dict.keys()
     print("num atoms: %s" % len(supported_atoms))
 
     print("reading traces files...")
     inputs = DatasetInputs(seebeck_traces_file, cond_traces_file, pf_traces_file, comp_gaps_file, metadata_file)
 
     print("creating datasets...")
-    transformer_seebeck_dataset = []
-    transformer_log10cond_dataset = []
-    transformer_log10pf_dataset = []
+    cratenet_seebeck_dataset = []
+    cratenet_log10cond_dataset = []
+    cratenet_log10pf_dataset = []
     metadata = []
     formulas = {formula for formula, _, _ in inputs.comp_to_seebeck_traces}
     for formula in tqdm(formulas):
@@ -80,27 +81,27 @@ if __name__ == '__main__':
 
         gap = inputs.comps_to_gaps[formula] if inputs.include_gap else None
 
-        transformer_input = get_transformer_input(composition, atom_dictionary, atom_vectors, max_elements, gap=gap)
+        cratenet_input = featurize_comp_for_cratenet(composition, atom_dict, atom_vectors, max_elements, gap=gap)
 
-        transformer_seebeck_dataset.append([transformer_input, seebeck_traces_combined])
-        transformer_log10cond_dataset.append([transformer_input, log10cond_traces_combined])
-        transformer_log10pf_dataset.append([transformer_input, log10pf_traces_combined])
+        cratenet_seebeck_dataset.append([cratenet_input, seebeck_traces_combined])
+        cratenet_log10cond_dataset.append([cratenet_input, log10cond_traces_combined])
+        cratenet_log10pf_dataset.append([cratenet_input, log10pf_traces_combined])
 
         metadata.append((formula, inputs.comp_to_metadata[formula] if inputs.has_metadata else ""))
 
-    print(f"number of entries in Seebeck dataset: {len(transformer_seebeck_dataset):,}")
-    print(f"number of entries in log10 electronic conductivity dataset: {len(transformer_log10cond_dataset):,}")
-    print(f"number of entries in log10 PF dataset: {len(transformer_log10pf_dataset):,}")
+    print(f"number of entries in Seebeck dataset: {len(cratenet_seebeck_dataset):,}")
+    print(f"number of entries in log10 electronic conductivity dataset: {len(cratenet_log10cond_dataset):,}")
+    print(f"number of entries in log10 PF dataset: {len(cratenet_log10pf_dataset):,}")
     print(f"number of metadata entries: {len(metadata):,}")
 
-    print(f"writing {transformer_seebeck_file}...")
-    with gzip.open(transformer_seebeck_file, "wb") as f:
-        pickle.dump((metadata, transformer_seebeck_dataset), f, protocol=pickle.HIGHEST_PROTOCOL)
+    print(f"writing {cratenet_seebeck_file}...")
+    with gzip.open(cratenet_seebeck_file, "wb") as f:
+        pickle.dump((metadata, cratenet_seebeck_dataset), f, protocol=pickle.HIGHEST_PROTOCOL)
 
-    print(f"writing {transformer_log10cond_file}...")
-    with gzip.open(transformer_log10cond_file, "wb") as f:
-        pickle.dump((metadata, transformer_log10cond_dataset), f, protocol=pickle.HIGHEST_PROTOCOL)
+    print(f"writing {cratenet_log10cond_file}...")
+    with gzip.open(cratenet_log10cond_file, "wb") as f:
+        pickle.dump((metadata, cratenet_log10cond_dataset), f, protocol=pickle.HIGHEST_PROTOCOL)
 
-    print(f"writing {transformer_log10pf_file}...")
-    with gzip.open(transformer_log10pf_file, "wb") as f:
-        pickle.dump((metadata, transformer_log10pf_dataset), f, protocol=pickle.HIGHEST_PROTOCOL)
+    print(f"writing {cratenet_log10pf_file}...")
+    with gzip.open(cratenet_log10pf_file, "wb") as f:
+        pickle.dump((metadata, cratenet_log10pf_dataset), f, protocol=pickle.HIGHEST_PROTOCOL)

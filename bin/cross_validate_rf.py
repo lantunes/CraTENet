@@ -2,26 +2,10 @@ import sys
 sys.path.extend([".", ".."])
 import argparse
 import numpy as np
-from sklearn.ensemble import RandomForestRegressor
+from cratenet.models import create_rf_model
+from cratenet.dataset import load_gzipped_dataset
 from sklearn.metrics import mean_absolute_error, r2_score
 from sklearn.model_selection import KFold
-import gzip
-
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-
-
-def load_gzipped_dataset(filename):
-    with gzip.open(filename, "rb") as f:
-        metadata, data = pickle.load(f)
-        dataset = np.array(data)
-        return metadata, np.array(dataset[:, 0].tolist()), np.array(dataset[:, 1].tolist())
-
-
-def create_model():
-    return RandomForestRegressor(n_estimators=200, n_jobs=4, bootstrap=True, max_depth=110, max_features=36)
 
 
 if __name__ == '__main__':
@@ -39,7 +23,7 @@ if __name__ == '__main__':
     n_folds = args.folds
 
     print(f"performing {n_folds}-fold cross-validation...")
-    print(" ".join(f"model: {create_model()}".replace("\n", "").split()))
+    print(" ".join(f"model: {create_rf_model()}".replace("\n", "").split()))
     print(f"random seed: {random_state}")
 
     metadata, X, y = load_gzipped_dataset(dataset_file)
@@ -54,7 +38,7 @@ if __name__ == '__main__':
         fold += 1
         print(f"FOLD {fold}")
 
-        regressor = create_model()
+        regressor = create_rf_model()
 
         print("training...")
 

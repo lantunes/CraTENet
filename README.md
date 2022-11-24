@@ -202,4 +202,6 @@ TODO
 -- create a getting started section (recommend that users should create a separate conda or virtual env that can be used for installing)
 - create a development section
 -- state that the environment can be created with either the requirements.txt or environment.yml
+
+- Band Gap Predictor
 ***

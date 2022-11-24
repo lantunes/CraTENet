@@ -2,9 +2,9 @@ import sys
 sys.path.extend([".", ".."])
 import argparse
 from pymatgen import Composition
-from skipatom import OneHotVectors
 from matminer.featurizers.composition import Meredig
-from cratenet.utils import DatasetInputs
+from cratenet.dataset import DatasetInputs
+from cratenet.models import featurize_comp_for_rf
 import gzip
 import numpy as np
 from tqdm import tqdm
@@ -68,8 +68,6 @@ if __name__ == '__main__':
     print("reading traces files...")
     inputs = DatasetInputs(seebeck_traces_file, cond_traces_file, pf_traces_file, comp_gaps_file, metadata_file)
 
-    ohv = OneHotVectors(elems=atoms)
-
     meredig = Meredig()
 
     print("creating datasets...")
@@ -83,16 +81,13 @@ if __name__ == '__main__':
         if any([e.name not in supported_atoms for e in composition.elements]):
             continue
 
-        meredig_vec = meredig.featurize(composition)  # it's not cheap to create the Meredig vector
-
         seebeck_traces_combined = DatasetInputs.combine_traces(formula, inputs.comp_to_seebeck_traces)
         log10cond_traces_combined = DatasetInputs.combine_traces(formula, inputs.comp_to_log10cond_traces)
         log10pf_traces_combined = DatasetInputs.combine_traces(formula, inputs.comp_to_log10pf_traces)
 
-        # drop columns 108 and 109 (apparently range and mean AtomicRadius), which contain NaNs in some records
-        meredig_vec = [i for j, i in enumerate(meredig_vec) if j not in [108, 109]]
-        if inputs.include_gap:
-            meredig_vec = list(meredig_vec) + [inputs.comps_to_gaps[formula]]
+        gap = inputs.comps_to_gaps[formula] if inputs.include_gap else None
+
+        meredig_vec = featurize_comp_for_rf(composition, meredig=meredig, gap=gap)
 
         meredig_seebeck_dataset.append([meredig_vec, seebeck_traces_combined])
         meredig_log10cond_dataset.append([meredig_vec, log10cond_traces_combined])

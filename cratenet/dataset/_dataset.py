@@ -1,8 +1,12 @@
 import csv
 import gzip
 import numpy as np
-from scipy import sparse
 from tqdm import tqdm
+
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 
 class DatasetInputs(object):
@@ -71,23 +75,6 @@ class DatasetInputs(object):
         return traces_combined
 
 
-def get_transformer_input(comp, dictionary, embeddings, max_elements, gap=None):
-    unscaled_vectors = np.zeros((max_elements, len(embeddings[0])))
-    amounts = np.zeros(max_elements)
-
-    for i, e in enumerate(comp.elements):
-        unscaled_vectors[i] = np.array(embeddings[dictionary[e.name]])
-        amounts[i] = comp.to_reduced_dict[e.name]
-
-    amounts = amounts / sum(amounts)
-
-    matrix = sparse.coo_matrix(unscaled_vectors.tolist())
-
-    if gap is not None:
-        return matrix, amounts, gap
-    return matrix, amounts
-
-
 def read_atom_vectors_from_csv(vectors_file):
     dictionary = {}
     embeddings = []
@@ -102,3 +89,10 @@ def read_atom_vectors_from_csv(vectors_file):
             dictionary[atom] = i
             embeddings.append(vals)
     return dictionary, embeddings
+
+
+def load_gzipped_dataset(filename):
+    with gzip.open(filename, "rb") as f:
+        metadata, data = pickle.load(f)
+        dataset = np.array(data)
+        return metadata, np.array(dataset[:, 0].tolist()), np.array(dataset[:, 1].tolist())
