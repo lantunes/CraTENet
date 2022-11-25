@@ -193,6 +193,22 @@ Alternatively, the pre-created datasets may be downloaded...  #TODO
 $ python bin/cross_validate_rf.py --dataset out/rf_seebeck_dataset.pkl.gz
 ```
 
+```
+$ python bin/holdout_rf.py \
+--dataset out/rf_seebeck_dataset.pkl.gz \
+--predictions out/rf_holdout_seebeck_predictions.csv \
+--actual out/rf_holdout_seebeck_actual.csv
+```
+
+```
+$ python bin/evaluate_predictions.py \
+--predictions out/rf_holdout_seebeck_predictions.csv \
+--actual out/rf_holdout_seebeck_actual.csv \
+--doping-level 1e+16 1e+17 \
+--doping-type p \
+--temperature 600
+```
+
 
 ***
 TODO 
@@ -202,6 +218,26 @@ TODO
 -- create a getting started section (recommend that users should create a separate conda or virtual env that can be used for installing)
 - create a development section
 -- state that the environment can be created with either the requirements.txt or environment.yml
+
+- 90-10 holdout (holdout_rf.py, holdout_cratenet.py)
+-- accepts: 
+--- dataset
+--- path for predictions
+--- percent to holdout (optional, default 10%) 
+--- seed (optional)
+--- path for model (optional)
+-- produces: 
+--- file with the predictions for each compound in the holdout set
+--- trained model (optional)
+-- we need a utility that accepts the produced file format and computes the r2 and mae for various slices (e.g. n-type @1e+20)
+
+- Final model (train_rf_model.py, train_cratenet_model.py)
+-- accepts:
+--- dataset
+--- path for model
+--- seed (optional)
+-- produces: 
+--- trained model
 
 - Band Gap Predictor
 ***
