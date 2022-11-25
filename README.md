@@ -10,6 +10,7 @@ the Tensorflow and Keras frameworks. It also provides a means of obtaining the d
 
 ## Table of Contents
 
+- [Getting Started](#getting-started)
 - [Obtaining the Training Data: The Dataset Preprocessing Pipeline](#obtaining-the-training-data-the-dataset-preprocessing-pipeline)
   - [1. Downloading the Ricci et al. Database](#1-downloading-the-ricci-et-al-database)
   - [2. Extracting the _S_ and _&sigma;_ Tensor Diagonals and Band Gap](#2-extracting-the-_s_-and-_sigma_-tensor-diagonals-and-band-gap)
@@ -17,6 +18,18 @@ the Tensorflow and Keras frameworks. It also provides a means of obtaining the d
   - [4. Disambiguating Duplicate Compositions](#4-disambiguating-duplicate-compositions)
   - [5. Creating the Training Datasets](#5-creating-the-training-datasets)
 - [Training the Models](#training-the-models)
+  - [Cross-Validation Experiments](#cross-validation-experiments)
+  - [90-10 Holdout Experiments](#90-10-holdout-experiments)
+  - [Training the Final Models](#training-the-final-models)
+- [Evaluating Predictions](#evaluating-predictions)
+- [Generating Selenides with SMACT](#generating-selenides-with-smact)
+- [Development](#development)
+  - [Setting up a Development Environment](#setting-up-a-development-environment)
+  - [Tests](#tests)
+
+## Getting Started
+
+<!-- TODO -->
 
 ## Obtaining the Training Data: The Dataset Preprocessing Pipeline
 
@@ -125,7 +138,7 @@ _NOTE: It is not strictly required that these files be created. They can instead
 information is provided for the sake of full reproducibility, should one wish to derive the training data from the 
 original database._
 
-Alternatively, previously deduplicated trace files can be downloaded...  #TODO 
+Alternatively, previously deduplicated trace files can be downloaded...  <!-- TODO --> 
 
 ```
 $ python bin/fetch_data.py seebeck_comp_traces
@@ -182,23 +195,35 @@ _NOTE: It is not strictly required that the training datasets be created. They c
 information is provided for the sake of full reproducibility, should one wish to derive the training data from the 
 original database._
 
-Alternatively, the pre-created datasets may be downloaded...  #TODO
+Alternatively, the pre-created datasets may be downloaded...  <!-- TODO -->
 
 
 ## Training the Models
 
-#TODO
+<!-- TODO -->
 
+### Cross-Validation Experiments
 ```
 $ python bin/cross_validate_rf.py --dataset out/rf_seebeck_dataset.pkl.gz
 ```
+<!-- TODO
+the cross_validate scripts should (optionally) produce predictions and actual files that can be analyzed  
+-->
 
+### 90-10 Holdout Experiments
 ```
 $ python bin/holdout_rf.py \
 --dataset out/rf_seebeck_dataset.pkl.gz \
 --predictions out/rf_holdout_seebeck_predictions.csv \
 --actual out/rf_holdout_seebeck_actual.csv
 ```
+
+### Training the Final Models
+
+<!-- TODO -->
+
+
+## Evaluating Predictions
 
 ```
 $ python bin/evaluate_predictions.py \
@@ -210,7 +235,27 @@ $ python bin/evaluate_predictions.py \
 ```
 
 
-***
+## Generating Selenides with SMACT
+
+<!-- TODO -->
+
+
+## Development
+
+<!-- TODO -->
+
+### Setting up a Development Environment
+
+<!-- TODO -->
+
+### Tests
+
+To run the unit tests:
+```
+$  python -m unittest discover tests "*_test.py"
+```
+
+<!--
 TODO 
 - rename "ricci_formulas.csv" to "ricci_compositions.csv"
 - create a setup.py for local installation (we won't put this repo on pypi)
@@ -240,4 +285,6 @@ TODO
 --- trained model
 
 - Band Gap Predictor
-***
+
+- SMACT code for generating selenides
+-->
