@@ -1,1 +1,1 @@
-from ._analysis import get_prediction_indices
+from ._analysis import read_data, get_prediction_indices
