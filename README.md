@@ -61,25 +61,25 @@ Assuming that the Ricci et al. electronic transport database files have been dow
 `etransport_data_1/` and `etransport_data_2/`, the following script can be used to extract the _S_ and _&sigma;_ 
 tensor diagonals (from which the target values will ultimately be derived):
 ```
-python bin/extract_data_xyz.py \
+$ python bin/extract_data_xyz.py \
 --dir ./etransport_data_1 ./etransport_data_2 \
 --out ricci_data_xyz.csv
 ```
 The same can be done to extract the band gaps associated with each compound:
 ```
-python bin/extract_data_gap.py \
+$ python bin/extract_data_gap.py \
 --dir ./etransport_data_1 ./etransport_data_2 \
 --out ricci_data_gap.csv
 ```
 
 Alternatively, previously extracted _S_ and _&sigma;_ tensor diagonals can be downloaded directly:
 ```
-python bin/fetch_data.py xyz
+$ python bin/fetch_data.py xyz
 ```
 The `xyz` argument specifies that the tensor diagonals data should be downloaded. To download the previously extracted 
 band gap data, use the `gap` argument instead:
 ```
-python bin/fetch_data.py gap
+$ python bin/fetch_data.py gap
 ```
 
 _NOTE: It is not strictly required that these extracted datasets be obtained. This can be skipped. This information is 
@@ -204,7 +204,8 @@ Alternatively, the pre-created datasets may be downloaded...  <!-- TODO -->
 
 ### Cross-Validation Experiments
 ```
-$ python bin/cross_validate_rf.py --dataset out/rf_seebeck_dataset.pkl.gz
+$ python bin/cross_validate_rf.py \
+--dataset out/rf_seebeck_dataset.pkl.gz
 ```
 <!-- TODO
 the cross_validate scripts should (optionally) produce predictions and actual files that can be analyzed  
@@ -225,6 +226,8 @@ $ python bin/holdout_rf.py \
 
 ## Evaluating Predictions
 
+<!-- TODO -->
+
 ```
 $ python bin/evaluate_predictions.py \
 --predictions out/rf_holdout_seebeck_predictions.csv \
@@ -237,7 +240,13 @@ $ python bin/evaluate_predictions.py \
 
 ## Generating Selenides with SMACT
 
-<!-- TODO -->
+To generate ternary selenides using SMACT:
+```
+$ python bin/generate_smact_selenides.py \
+--out out/generated_smact_selenides_ternary.txt
+```
+
+A pre-generated list of SMACT ternary selenides is located in `data/generated_smact_selenides_ternary.txt`.
 
 
 ## Development
@@ -252,7 +261,7 @@ $ python bin/evaluate_predictions.py \
 
 To run the unit tests:
 ```
-$  python -m unittest discover tests "*_test.py"
+$ python -m unittest discover tests "*_test.py"
 ```
 
 <!--
@@ -274,7 +283,6 @@ TODO
 -- produces: 
 --- file with the predictions for each compound in the holdout set
 --- trained model (optional)
--- we need a utility that accepts the produced file format and computes the r2 and mae for various slices (e.g. n-type @1e+20)
 
 - Final model (train_rf_model.py, train_cratenet_model.py)
 -- accepts:
@@ -285,6 +293,4 @@ TODO
 --- trained model
 
 - Band Gap Predictor
-
-- SMACT code for generating selenides
 -->
