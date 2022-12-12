@@ -17,11 +17,12 @@ the Tensorflow and Keras frameworks. It also provides a means of obtaining the d
   - [3. Computing the _S_, _&sigma;_ and _PF_ Traces](#3-computing-the-_s_-_sigma_-and-_pf_-traces)
   - [4. Disambiguating Duplicate Compositions](#4-disambiguating-duplicate-compositions)
   - [5. Creating the Training Datasets](#5-creating-the-training-datasets)
-- [Training the Models](#training-the-models)
+- [Training the Thermoelectric Property Predictors](#training-the-thermoelectric-property-predictors)
   - [Cross-Validation Experiments](#cross-validation-experiments)
   - [90-10 Holdout Experiments](#90-10-holdout-experiments)
   - [Training the Final Models](#training-the-final-models)
-- [Evaluating Predictions](#evaluating-predictions)
+- [Training the Band Gap Predictor](#training-the-band-gap-predictor)
+- [Evaluating Thermoelectric Property Predictions](#evaluating-thermoelectric-property-predictions)
 - [Generating Selenides with SMACT](#generating-selenides-with-smact)
 - [Development](#development)
   - [Setting up a Development Environment](#setting-up-a-development-environment)
@@ -29,7 +30,7 @@ the Tensorflow and Keras frameworks. It also provides a means of obtaining the d
 
 ## Getting Started
 
-<!-- TODO -->
+TODO <!-- TODO -->
 
 ## Obtaining the Training Data: The Dataset Preprocessing Pipeline
 
@@ -198,9 +199,9 @@ original database._
 Alternatively, the pre-created datasets may be downloaded...  <!-- TODO -->
 
 
-## Training the Models
+## Training the Thermoelectric Property Predictors
 
-<!-- TODO -->
+TODO <!-- TODO -->
 
 ### Cross-Validation Experiments
 ```
@@ -224,7 +225,12 @@ $ python bin/holdout_rf.py \
 <!-- TODO -->
 
 
-## Evaluating Predictions
+## Training the Band Gap Predictor
+
+<!-- TODO -->
+
+
+## Evaluating Thermoelectric Property Predictions
 
 <!-- TODO -->
 
@@ -251,11 +257,11 @@ A pre-generated list of SMACT ternary selenides is located in `data/generated_sm
 
 ## Development
 
-<!-- TODO -->
+TODO <!-- TODO -->
 
 ### Setting up a Development Environment
 
-<!-- TODO -->
+TODO <!-- TODO -->
 
 ### Tests
 
@@ -291,6 +297,7 @@ TODO
 --- seed (optional)
 -- produces: 
 --- trained model
+-- gzipping should be optional?
 
 - Band Gap Predictor
 -->
