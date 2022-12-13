@@ -209,7 +209,7 @@ $ python bin/cross_validate_rf.py \
 --dataset out/rf_seebeck_dataset.pkl.gz
 ```
 <!-- TODO
-the cross_validate scripts should (optionally) produce predictions and actual files that can be analyzed  
+the cross_validate scripts (optionally) produce predictions and actual files that can be analyzed  
 -->
 
 ### 90-10 Holdout Experiments
@@ -278,17 +278,6 @@ TODO
 -- create a getting started section (recommend that users should create a separate conda or virtual env that can be used for installing)
 - create a development section
 -- state that the environment can be created with either the requirements.txt or environment.yml
-
-- 90-10 holdout (holdout_rf.py, holdout_cratenet.py)
--- accepts: 
---- dataset
---- path for predictions
---- percent to holdout (optional, default 10%) 
---- seed (optional)
---- path for model (optional)
--- produces: 
---- file with the predictions for each compound in the holdout set
---- trained model (optional)
 
 - Final model (train_rf_model.py, train_cratenet_model.py)
 -- accepts:

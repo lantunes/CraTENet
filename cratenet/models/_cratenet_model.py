@@ -262,9 +262,9 @@ class PropertyAndUncertainty(Layer):
             tf.reshape(uncertainty, shape=(batch_size, 1))], axis=1)
 
 
-class GapInjector(Layer):
+class ExtraInjector(Layer):
     def __init__(self, maxlen):
-        super(GapInjector, self).__init__()
+        super(ExtraInjector, self).__init__()
         self.maxlen = maxlen
 
     def get_config(self):
@@ -282,7 +282,7 @@ class GapInjector(Layer):
 
 class CraTENet:
     def __init__(self, maxlen=8, embed_dim=200, num_heads=4, ff_dim=2048, num_transformer_blocks=3,
-                 activation=LeakyReLU(alpha=1e-2), d_model=512, n_outputs=1, n_heads=1, n_extra_in=1):
+                 activation=LeakyReLU(alpha=1e-2), d_model=512, n_outputs=1, n_heads=1, n_extra_in=0):
         """
         Supports multi-output regression. There will be n_outputs*2 outputs. The first output for an output pair
         is the target, while the second output is the variance. For example, for n_outputs=3, there will be 6 outputs;
@@ -293,14 +293,18 @@ class CraTENet:
         :param embed_dim: Embedding size for each token
         :param num_heads: Number of attention heads
         :param ff_dim: Hidden layer size in feed forward network inside transformer
-        :param n_heads: the number of output heads
+        :param num_transformer_blocks: the number of transformer blocks
+        :param activation: the activation to use for the residual blocks
+        :param d_model: the embedder dimensionality
         :param n_outputs: an int or a list, specifying the number of outputs in each output head
+        :param n_heads: the number of output heads
+        :param n_extra_in: the number of extra features to inject
         """
         self._n_heads = n_heads
 
         atoms_input = Input(shape=(maxlen, embed_dim,))
-        gap_input = Input(shape=(n_extra_in,))
         amount_input = Input(shape=(maxlen,))
+        inputs = [atoms_input, amount_input]
 
         x = Dense(d_model)(atoms_input)  # Embedder
 
@@ -314,8 +318,11 @@ class CraTENet:
         for i in range(num_transformer_blocks):
             x = TransformerBlock(embed_dim, num_heads, ff_dim)(x)
 
-        g = Dense(embed_dim, activation="relu")(gap_input)
-        x = GapInjector(maxlen)(g, x)
+        if n_extra_in > 0:
+            extra_input = Input(shape=(n_extra_in,))
+            inputs.append(extra_input)
+            extra = Dense(embed_dim, activation="relu")(extra_input)
+            x = ExtraInjector(maxlen)(extra, x)
 
         outputs = []
         for i in range(n_heads):
@@ -339,7 +346,7 @@ class CraTENet:
                 out = outs[0]
             outputs.append(out)
 
-        self._model = Model(inputs=[atoms_input, amount_input, gap_input], outputs=outputs)
+        self._model = Model(inputs=inputs, outputs=outputs)
 
     def _residual_block(self, units, input, activation):
         x = Dense(units)(input)
