@@ -30,7 +30,17 @@ the Tensorflow and Keras frameworks. It also provides a means of obtaining the d
 
 ## Getting Started
 
-TODO <!-- TODO -->
+To set up a Python environment with all the required dependencies, first clone this repository and then install with 
+`pip`, from the root of the repository:
+```
+$ pip install .
+```
+_NOTE_: It is highly recommended that a separate virtual Python environment is used. For example, one could create a 
+Python virtual environment using conda, before installing with the `pip` command:
+```
+$ conda create -n "cratenet_env" python=3.6
+$ source activate cratenet_env
+```
 
 ## Obtaining the Training Data: The Dataset Preprocessing Pipeline
 
@@ -222,17 +232,17 @@ $ python bin/holdout_rf.py \
 
 ### Training the Final Models
 
-<!-- TODO -->
+TODO <!-- TODO -->
 
 
 ## Training the Band Gap Predictor
 
-<!-- TODO -->
+TODO <!-- TODO -->
 
 
 ## Evaluating Thermoelectric Property Predictions
 
-<!-- TODO -->
+TODO <!-- TODO -->
 
 ```
 $ python bin/evaluate_predictions.py \
@@ -273,9 +283,7 @@ $ python -m unittest discover tests "*_test.py"
 <!--
 TODO 
 - rename "ricci_formulas.csv" to "ricci_compositions.csv"
-- create a setup.py for local installation (we won't put this repo on pypi)
--- replace `python bin/create_rf_datasets.py` with `create_rf_datasets`, etc., once these scripts have been installed as CLI programs
--- create a getting started section (recommend that users should create a separate conda or virtual env that can be used for installing)
+- create a getting started section (recommend that users should create a separate conda or virtual env that can be used for installing)
 - create a development section
 -- state that the environment can be created with either the requirements.txt or environment.yml
 

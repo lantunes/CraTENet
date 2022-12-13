@@ -15,5 +15,5 @@ dependencies:
       - tensorflow==2.3.1
       - matminer==0.6.3
       - smact==2.3.1
-      - requests~=2.28.1
+      - requests~=2.27.1
       - scipy~=1.5.3
