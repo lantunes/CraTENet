@@ -32,7 +32,7 @@ the data required for the experiments.
 ## Getting Started
 
 To set up a Python environment with all the required dependencies, first clone this repository and then install with 
-`pip`, from the root of the repository:
+`pip` (Python 3.6 is required); from the root of the repository:
 ```
 $ pip install .
 ```
@@ -212,24 +212,50 @@ Alternatively, the pre-created datasets may be downloaded...  <!-- TODO -->
 
 ## Training the Thermoelectric Property Predictors
 
-TODO <!-- TODO -->
-
 ### Cross-Validation Experiments
+
+To perform cross-validation with the Random Forest model:
 ```
 $ python bin/cross_validate_rf.py \
 --dataset out/rf_seebeck_dataset.pkl.gz
 ```
-<!-- TODO
-the cross_validate scripts (optionally) produce predictions and actual files that can be analyzed  
--->
+
+To perform cross-validation with the CraTENet model:
+```
+$ python bin/cross_validate_cratenet.py \
+--dataset-seebeck out/cratenet_seebeck_gap_dataset.pkl.gz \
+--dataset-log10cond out/cratenet_log10cond_gap_dataset.pkl.gz \
+--dataset-log10pf out/cratenet_log10pf_gap_dataset.pkl.gz \
+--with-gaps
+```
+Note that the `--with-gaps` argument is optional, and should only be provided when the datasets contain gaps and we'd
+like the gaps to be given as input to the model.
+
+The cross-validation scripts optionally produce files that contain the predictions and corresponding actual values for 
+each fold. Simply provide the `--results-dir` argument when invoking the scripts, supplying the directory where the 
+files should be placed.
 
 ### 90-10 Holdout Experiments
+
+To perform a 90-10 holdout experiment with the Random Forest model:
 ```
 $ python bin/holdout_rf.py \
 --dataset out/rf_seebeck_dataset.pkl.gz \
 --predictions out/rf_holdout_seebeck_predictions.csv \
 --actual out/rf_holdout_seebeck_actual.csv
 ```
+
+To perform a 90-10 holdout experiment with the CraTENet model:
+```
+$ python bin/holdout_cratenet.py \
+--dataset-seebeck out/cratenet_seebeck_gap_dataset.pkl.gz \
+--dataset-log10cond out/cratenet_log10cond_gap_dataset.pkl.gz \
+--dataset-log10pf out/cratenet_log10pf_gap_dataset.pkl.gz \
+--with-gaps \
+--results-dir out/holdout_temp
+```
+Note that the `--with-gaps` argument is optional, and should only be provided when the datasets contain gaps and we'd
+like the gaps to be given as input to the model.
 
 ### Training the Final Models
 
@@ -243,8 +269,12 @@ TODO <!-- TODO -->
 
 ## Evaluating Thermoelectric Property Predictions
 
-TODO <!-- TODO -->
+To evaluate the predictions produced by the ML models, the `evaluate_predictions.py` script can be used. This script
+requires the path to the .csv file containing the predictions, the path the .csv file containing the actual values, and 
+it allows the doping levels, doping types, and temperatures of interest to be specified, in order to understand the 
+performance through various cross-sections of the data.
 
+To evaluate predictions:
 ```
 $ python bin/evaluate_predictions.py \
 --predictions out/rf_holdout_seebeck_predictions.csv \
@@ -268,11 +298,21 @@ A pre-generated list of SMACT ternary selenides is located in `data/generated_sm
 
 ## Development
 
-TODO <!-- TODO -->
-
 ### Setting up a Development Environment
 
-TODO <!-- TODO -->
+The recommended method for creating a development environment is to use conda, along with the supplied `environment.yml`
+file. From the root of the project:
+```
+$ conda env create -f environment.yml
+```
+This will create a conda environment with all the dependencies required for development. Simply activate the newly 
+created conda environment:
+```
+$ source activate cratenet_env
+```
+
+Alternatively, a Python virtual environment can be created, and then `pip` can be used to install the dependencies 
+specified in the `requirements.txt` file into the virtual environment.
 
 ### Tests
 
@@ -284,9 +324,6 @@ $ python -m unittest discover tests "*_test.py"
 <!--
 TODO 
 - rename "ricci_formulas.csv" to "ricci_compositions.csv"
-- create a getting started section (recommend that users should create a separate conda or virtual env that can be used for installing)
-- create a development section
--- state that the environment can be created with either the requirements.txt or environment.yml
 
 - Final model (train_rf_model.py, train_cratenet_model.py)
 -- accepts:
