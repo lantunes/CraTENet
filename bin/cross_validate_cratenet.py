@@ -78,6 +78,7 @@ if __name__ == '__main__':
                      (dataset_log10pf_file, 1.0)]
 
     n_heads = len(dataset_files)
+    n_extra_in = 1 if with_gaps else 0
 
     kfold = KFold(n_splits=n_folds, shuffle=True, random_state=random_state)
 
@@ -172,7 +173,8 @@ if __name__ == '__main__':
             loss_init=np.Inf,
             patience=patience)
         model = CraTENet(maxlen=maxlen, embed_dim=embed_dim, num_heads=num_heads, ff_dim=ff_dim,
-                         num_transformer_blocks=num_transformer_blocks, d_model=d_model, n_heads=n_heads, n_outputs=n_outputs)
+                         num_transformer_blocks=num_transformer_blocks, d_model=d_model, n_heads=n_heads,
+                         n_outputs=n_outputs, n_extra_in=n_extra_in)
         train_X = [X_train_atoms, X_train_amounts]
         if with_gaps:
             train_X.append(X_train_gaps)
@@ -191,7 +193,8 @@ if __name__ == '__main__':
         print(f"logging retraining results to {log_file}")
         csv_logger = CSVLogger(log_file, separator=",", append=True)
         final_model = CraTENet(maxlen=maxlen, embed_dim=embed_dim, num_heads=num_heads, ff_dim=ff_dim,
-                               num_transformer_blocks=num_transformer_blocks, d_model=d_model, n_heads=n_heads, n_outputs=n_outputs)
+                               num_transformer_blocks=num_transformer_blocks, d_model=d_model, n_heads=n_heads,
+                               n_outputs=n_outputs, n_extra_in=n_extra_in)
         A_X = [X_A_atoms, X_A_amounts]
         if with_gaps:
             A_X.append(X_A_gaps)
