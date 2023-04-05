@@ -3,9 +3,9 @@ CraTENet
 
 CraTENet is a multi-output deep neural network with multi-head self-attention for thermoelectric property prediction, 
 based on the [CrabNet](https://github.com/anthony-wang/CrabNet) architecture. This repository contains code that can 
-be used to reproduce the experiments described in [the paper](https://arxiv.org/abs/2212.06444), including an 
-implementation of the CraTENet model, using the Tensorflow and Keras frameworks. It also provides a means of obtaining 
-the data required for the experiments.
+be used to reproduce the experiments described in [the paper](https://iopscience.iop.org/article/10.1088/2632-2153/acc4a9), 
+including an implementation of the CraTENet model, using the Tensorflow and Keras frameworks. It also provides a means of 
+obtaining the data required for the experiments.
 
 <img src="resources/cratenet-arch.png" width="60%"/>
 
